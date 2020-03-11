@@ -19,7 +19,7 @@ def proof_of_work(block):
     proof = 0 
     while valid_proof(block_string, proof) is False:
         proof += 1
-    # TODO
+
     return proof
 
 
@@ -66,14 +66,14 @@ if __name__ == '__main__':
             break
 
         # TODO: Get the block from `data` and use it to look for a new proof
-        # new_proof = ???
         block = data['block']
         print('getting proof')
         new_proof = proof_of_work(block)
+
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
         print(f'Found proof: {post_data}')
-        r = requests.post(url=node + "/mine", json=post_data)
+        r = requests.post(url= node + "/mine", json= post_data)
         data = r.json()
 
         # TODO: If the server responds with a 'message' 'New Block Forged'

@@ -56,7 +56,7 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 
 
-@app.route('/mine', methods=['GET'])
+@app.route('/mine', methods=['POST'])
 def mine():
     # chack if block is valid
     data = request.get_json()
