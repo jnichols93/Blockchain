@@ -1,5 +1,3 @@
-# Paste your version of blockchain.py from the basic_block_gp
-# folder here
 import hashlib
 import json
 from time import time
@@ -22,7 +20,7 @@ class Blockchain(object):
         'timestamp' : time(),
         'transactions' : self.current_transactions,
         'proof' : proof,
-        'previous_hash' : previous_hash or self.hash(self.chain[-1])
+        'previous_hash' : previous_hash or self.hash(self.last_block)
         }
         # Reset the current list of transactions
         self.current_transactions = []
@@ -32,15 +30,16 @@ class Blockchain(object):
         return block
     
     def hash(self, block):
-        block_string = json.dumps(block, sort_keys = True).encode()
-        hash = hashlib.sha256(block_string).hexdigest()
-        return hash
+        block_string = json.dumps(block, sort_keys = True)
+        block_hash = hashlib.sha256(block_string.encode())
+        return block_hash.hexdigest()
     @property
     def last_block(self):
         return self.chain[-1]
 
     @staticmethod
     def valid_proof(block_string, proof):
+        block_string = json.dumps('block', sort_keys=True)
         guess = f'{block_string}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:6] == "000000"
@@ -58,45 +57,30 @@ blockchain = Blockchain()
 
 @app.route('/mine', methods=['POST'])
 def mine():
-    # chack if block is valid
+    
     data = request.get_json()
-    required = ['proof', 'id']
+    
+    if not data['proof'] or not data['id']:
+        return jsonify({'message': 'Missing "proof" or "id"'}), 400
+    # forge the new block by adding it to chain with proof
+    if blockchain.valid_proof(blockchain.last_block, data['proof']):
+        new_block = blockchain.new_block(data['proof'])
 
-    for key in required:
-        if key not in data:
-            response = {
-                'Error': 'required data not present'
-            }
-            code = 400
-        # check if proof is valid
+        response ={
+        # send a json response with new block
+        'message':'New Block Forged',
+        'newBlock': new_block,
+        }
     else:
-        block_string =json.dumps(blockchain.last_block, sort_keys= True)
-
-        miner_proof = data['proof']
-
-        if blockchain.valid_proof(block_string, miner_proof):
-            previous_hash = blockchain.hash(blockchain.last_block)
-            new_block = blockchain.new_block(miner_proof, previous_hash)
-
-            response = {
-                'status': 'success',
-                'message': 'New Block Forged',
-                'block': new_block
-            }
-            code = 200
-        else:
-                response = {
-                    'status': 'failure',
-                    'message': 'try again',
-                    'block': blockchain.last_block
-                }
-        code = 400
-    return jsonify(response), code
+        response ={
+            'message': 'proof no bueno'
+        }
+    return jsonify(response), 200
 
 @app.route('/last_block', methods = ['GET'])
 def get_last():
     response = {
-        'block': blockchain.chain[-1]
+        'lastBlock': blockchain.last_block
     }
     return jsonify(response), 200
     
