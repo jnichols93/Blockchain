@@ -39,19 +39,11 @@ class Blockchain(object):
     def last_block(self):
         return self.chain[-1]
 
-    def proof_of_work(self, block):
-        block_string = json.dumps(block, sort_keys = True)
-
-        proof = 3 
-        while self.valid_proof(block_string, proof) is False:
-            proof += 1
-        return proof
-
     @staticmethod
     def valid_proof(block_string, proof):
         guess = f'{block_string}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:3] == "000"
+        return guess_hash[:6] == "000000"
 
 
 # Instantiate our Node
@@ -63,19 +55,51 @@ node_identifier = str(uuid4()).replace('-', '')
 # Instantiate the Blockchain
 blockchain = Blockchain()
 
+
 @app.route('/mine', methods=['GET'])
 def mine():
-    proof = blockchain.proof_of_work(blockchain.last_block)
-    previous_hash = blockchain.hash(blockchain.last_block)
-    block = blockchain.new_block(proof, previous_hash)
+    # chack if block is valid
+    data = request.get_json()
+    required = ['proof', 'id']
 
+    for key in required:
+        if key not in data:
+            response = {
+                'Error': 'required data not present'
+            }
+            code = 400
+        # check if proof is valid
+    else:
+        block_string =json.dumps(blockchain.last_block, sort_keys= True)
+
+        miner_proof = data['proof']
+
+        if blockchain.valid_proof(block_string, miner_proof):
+            previous_hash = blockchain.hash(blockchain.last_block)
+            new_block = blockchain.new_block(miner_proof, previous_hash)
+
+            response = {
+                'status': 'success',
+                'message': 'New Block Forged',
+                'block': new_block
+            }
+            code = 200
+        else:
+                response = {
+                    'status': 'failure',
+                    'message': 'try again',
+                    'block': blockchain.last_block
+                }
+        code = 400
+    return jsonify(response), code
+
+@app.route('/last_block', methods = ['GET'])
+def get_last():
     response = {
-        'new_block' : block
+        'block': blockchain.chain[-1]
     }
-
     return jsonify(response), 200
-
-
+    
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
