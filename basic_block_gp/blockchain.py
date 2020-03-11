@@ -62,17 +62,16 @@ class Blockchain(object):
         # or we'll have inconsistent hashes
 
         # TODO: Create the block_string
-
+        block_string = json.dumps(block, sort_keys = True).encode()
         # TODO: Hash this string using sha256
-
+        hash = hashlib.sha256(block_string).hexdigest()
         # By itself, the sha256 function returns the hash in a raw string
         # that will likely include escaped characters.
         # This can be hard to read, but .hexdigest() converts the
         # hash to a string of hexadecimal characters, which is
         # easier to work with and understand
-
         # TODO: Return the hashed block string in hexadecimal format
-        pass
+        return hash
 
     @property
     def last_block(self):
@@ -124,7 +123,7 @@ def mine():
     # Forge the new Block by adding it to the chain with the proof
 
     response = {
-        # TODO: Send a JSON response with the new block
+        
     }
 
     return jsonify(response), 200
