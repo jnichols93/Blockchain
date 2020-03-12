@@ -3,7 +3,8 @@ import requests
 
 import sys
 import json
-import time
+
+coin_count = 0
 
 
 def proof_of_work(block):
@@ -14,9 +15,10 @@ def proof_of_work(block):
     in an effort to find a number that is a valid proof
     :return: A valid proof for the provided block
     """
-    block_string = json.dumps(block, sort_keys = True)
 
-    proof = 1 
+    block_string = json.dumps(block, sort_keys=True)
+
+    proof = 0
     while valid_proof(block_string, proof) is False:
         proof += 1
 
@@ -36,8 +38,8 @@ def valid_proof(block_string, proof):
     """
     guess = f'{block_string}{proof}'.encode()
     guess_hash = hashlib.sha256(guess).hexdigest()
-        
-    return guess_hash[:3] == "000"
+
+    return guess_hash[:6] == "000000"
 
 
 if __name__ == '__main__':
@@ -53,7 +55,6 @@ if __name__ == '__main__':
     print("ID is", id)
     f.close()
 
-    coins = 0
     # Run forever until interrupted
     while True:
         r = requests.get(url=node + "/last_block")
@@ -67,22 +68,18 @@ if __name__ == '__main__':
             break
 
         # TODO: Get the block from `data` and use it to look for a new proof
-        print('GET ME THE PROOF')
-        start_time = time.time()
-        new_proof = proof_of_work(data['lastBlock'])
-        print('Stopped:', time.time() - start_time, 'seconds')
+
+        new_proof = proof_of_work(data['last_block'])
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
-        print(f'Found proof: {post_data}')
-        r = requests.post(url= node + "/mine", json= post_data)
-        data = r.json()
 
+        r = requests.post(url=node + "/mine", json=post_data)
+
+        data = r.json()
         # TODO: If the server responds with a 'message' 'New Block Forged'
-        if data['message'] == 'New Block Forged':
         # add 1 to the number of coins mined and print it.  Otherwise,
-            coins += 1
-            print('Received 1 coin, total coins =', coins)
         # print the message from the server.
-        else:
-            print(data['message'])
+        if 'message' in data:
+            coin_count += 1
+            print(f'{id} has mined {coin_count} coins')
