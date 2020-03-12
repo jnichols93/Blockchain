@@ -4,7 +4,7 @@ import axios from "axios";
 
 import Charts from "./components/Charts";
 import Navbar from "./components/Navbar";
-
+import Wallet from "./components/Wallet"
 import "./styles.scss";
 
 const App = () => {
@@ -20,6 +20,7 @@ const App = () => {
   }, []);
   return (
     <div className="App">
+    <Wallet/>
       <Navbar />
       <Charts coinData={coinData} />
     </div>

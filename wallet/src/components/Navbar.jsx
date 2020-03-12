@@ -11,6 +11,8 @@ const Navbar = () => {
     <nav className="navbar">
       <h1>Crypto Tracker</h1>
       {console.log(darkMode)}
+      <div className="pagesNav">
+      </div>
       <div className="dark-mode__toggle">
         <div
           onClick={toggleMode}
