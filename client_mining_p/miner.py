@@ -37,7 +37,7 @@ def valid_proof(block_string, proof):
     guess = f'{block_string}{proof}'.encode()
     guess_hash = hashlib.sha256(guess).hexdigest()
         
-    return guess_hash[:6] == "000000"
+    return guess_hash[:3] == "000"
 
 
 if __name__ == '__main__':
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         print('GET ME THE PROOF')
         start_time = time.time()
         new_proof = proof_of_work(data['lastBlock'])
-        print('Stopped:', time.time() - start_time, 's')
+        print('Stopped:', time.time() - start_time, 'seconds')
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}

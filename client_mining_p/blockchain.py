@@ -42,7 +42,7 @@ class Blockchain(object):
         block_string = json.dumps('block', sort_keys=True)
         guess = f'{block_string}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:6] == "000000"
+        return guess_hash[:3] == "000"
 
 
 # Instantiate our Node
@@ -73,7 +73,7 @@ def mine():
         }
     else:
         response ={
-            'message': 'proof no bueno'
+            'message': 'No block 4 u, try again.'
         }
     return jsonify(response), 200
 
