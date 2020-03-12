@@ -69,6 +69,7 @@ class Blockchain(object):
         :param block": <dict> Block
         "return": <str>
         """
+
         # Use json.dumps to convert json into a string
         string_block = json.dumps(block, sort_keys=True)
         # Use hashlib.sha256 to create a hash
@@ -78,6 +79,8 @@ class Blockchain(object):
         # It converts the Python string into a byte string.
         # We must make sure that the Dictionary is Ordered,
         # or we'll have inconsistent hashes
+        
+
         # TODO: Create the block_string
 
         # TODO: Hash this string using sha256
@@ -147,7 +150,7 @@ def receive_transaction():
         response = {'message': "Missing values"}
         return jsonify(response), 400
 
-    index = blockchain.new_transaction(values['sender'],values['recipient'], values['amount'])
+    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
 
     response = {"message": f'Transaction will be added to block {index}'}
     return jsonify(response), 201
@@ -175,6 +178,7 @@ def mine():
     # * Check that 'proof', and 'id' are present
     #     * return a 400 error using `jsonify(response)` 
     # with a 'message'
+
     block_string = json.dumps(blockchain.last_block, sort_keys=True)
     if blockchain.valid_proof(block_string, submitted_proof):
 
@@ -198,6 +202,7 @@ def mine():
 
         return jsonify(response), 200
 
+
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
@@ -216,6 +221,7 @@ def return_last_block():
     }
     return jsonify(response), 200
 
+
 # Run the program on port 5000
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port =5000
+    app.run(host='0.0.0.0', port=5000)
