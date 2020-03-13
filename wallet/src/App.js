@@ -1,114 +1,94 @@
-import React, { useState, useEffect } from 'react'
+import React, { Component } from 'react';
+import Display from './Components/Display';
+import Form from './Components/Form';
+import axios from "axios";
 
-import styled from 'styled-components'
-
-import CssBaseline from '@material-ui/core/CssBaseline'
-import { ThemeProvider } from '@material-ui/core/styles'
-import { createMuiTheme } from '@material-ui/core/styles'
-
-import { Typography } from '@material-ui/core'
-
-import axios from 'axios'
-
-import UserForm from './Components/UserForm'
-import Menu from './Components/Menu'
-import CustomTable from './Components/Table'
-import User from './Components/User'
-
-const theme = createMuiTheme({
-  palette: {
-    type: 'dark',
-  },
-  typography: {
-    useNextVariants: true,
-  },
-})
-
-const StyledArticle = styled.article`
-  width: 50%;
-  margin: 1rem auto;
-`
-
-function App() {
-  const [username, setUserName] = useState('')
-  const [user, setUser] = useState('')
-  const [checked, setCheck] = useState(false)
-  const [sent, setSent] = useState([])
-  const [received, setReceived] = useState([])
-  const [balance, setBalance] = useState(null)
-  const getTransactions = (user) => {
-    axios
-      .get('http://localhost:5000/transactions', {
-        headers: {
-          id: user,
-        },
-      })
-      .then(res => {
-        console.log(res)
-        setBalance(res.data.balance)
-        setSent(res.data.sent)
-        setReceived(res.data.received)
-      })
-      .catch(err => {
-        console.log(err)
-      })
+class App extends Component {
+  state={
+    chain: [],
+    title: "Whole Chain",
+    coins: null,
+    filteredChain: [],
+    id: null
   }
-  useEffect(() => {
-    if (localStorage.getItem('coin-user')) {
-      setUser(localStorage.getItem('coin-user'))
-      getTransactions(localStorage.getItem('coin-user'))
+
+  componentDidMount() {
+    this.getChain()
+  }
+
+  getChain = () => {
+    axios.get('http://localhost:5000/chain')
+    .then(({data}) => this.setState({chain: data.chain}))
+    .catch(err => console.error(err))
+  }
+
+  filterChain = (id) => {
+    console.log("CHAIN: ", this.state.chain, "\n id: ", id)
+    const filteredChain = this.state.chain.filter(block => {
+      console.log("block: ", block)
+      if (!block.transactions.length) {
+        return false
+      }
+      else {
+        return block.transactions[0].recipient === id
+      } 
+    })
+    if (!filteredChain.length) {
+      this.setState({
+        warning: "No user by that id was found",
+        title: "Whole Chain",
+        filteredChain: [],
+        coins: null
+      })
+      setTimeout(() => {
+        this.setState({warning: ''})
+      }, 3000);
     }
-  }, [])
-  const handleTextChange = e => {
-    setUserName(e.target.value)
-  }
-  const handleCheck = e => {
-    setCheck(!checked)
-  }
-  const handleSubmit = e => {
-    e.preventDefault()
-    setUser(username)
-    if (checked) {
-      localStorage.setItem('coin-user', username)
+    else {
+      this.setState(
+      {
+        id,
+        title: `${id}'s Transactions`,
+        filteredChain,
+        warning: null
+      }
+      )
+      setTimeout(() => {
+        this.getCoins(id)
+      }, 500);
     }
-    getTransactions(username)
-    setUserName('')
+  } 
+
+  getCoins = (id) => {
+    let totalCoins = 0;
+    this.state.filteredChain.forEach(block => {
+      console.log("COINS FOREACH: ", block, id)
+      if(block.transactions[0].recipient === id) {
+        return totalCoins += block.transactions[0].amount
+      }
+      if(block.transactions[0].sender === id) {
+        return totalCoins -= block.transactions[0].amount
+      }
+    })
+    this.setState({coins: totalCoins})
   }
-  const logout = e => {
-    localStorage.removeItem('coin-user')
-    setUser('')
-    setUserName('')
-    setSent([])
-    setReceived([])
+
+  render() {
+    return (
+      <div className="App">
+        <Form 
+          filterChain={this.filterChain}
+        />
+        <h2>{this.state.warning}</h2>
+        <Display 
+          coins={this.state.coins}
+          chain={this.state.filteredChain.length ? this.state.filteredChain : this.state.chain}
+          title={this.state.title}
+          length={this.state.chain.length}
+        />
+      </div>
+    );
   }
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline>
-        <Menu logout={logout}/>
-        <StyledArticle className="App">
-          <Typography variant="h2" component="h2">
-            Coin Miner
-          </Typography>
-          {user.length > 0 ? (
-            <User username={user} balance={balance}/>
-          ) : (
-            <UserForm
-              handleSubmit={handleSubmit}
-              handleCheck={handleCheck}
-              handleTextChange={handleTextChange}
-              username={username}
-              checked={checked}
-            />
-          )}
-          <Typography variant="h3" component="h3">
-            Transactions
-          </Typography>
-          <CustomTable title="Sent" rows={sent} />
-          <CustomTable title="Received" rows={received} />
-        </StyledArticle>
-      </CssBaseline>
-    </ThemeProvider>
-  )
 }
 
-export default App
+export default App;
